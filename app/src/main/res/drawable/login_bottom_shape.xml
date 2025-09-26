@@ -1,0 +1,13 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="360dp"
+    android:height="360dp"
+    android:viewportWidth="360"
+    android:viewportHeight="360">
+
+
+
+    <!-- Bottom inverted wave -->
+    <path
+        android:fillColor="#40FFFFFF"
+        android:pathData="M0,360 L360,360 L360,260 Q280,180 180,240 Q80,300 0,260 Z" />
+</vector>

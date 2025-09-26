@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Attendance Sheet</title>
+    <style>
+        body { font-family: Arial; margin: 0; padding: 10px; background: #f4f4f9; }
+        .table-container { width: 100%; height: 90vh; overflow: auto; border: 1px solid #ccc; background: white; }
+        table { border-collapse: collapse; width: max-content; min-width: 100%; }
+        th, td { border: 1px solid #ddd; text-align: center; padding: 8px 12px; white-space: nowrap; }
+        th { background: #3f51b5; color: white; position: sticky; top: 0; z-index: 2; }
+        .present { background-color: #b2ff59; }
+        .absent { background-color: #ff8a80; }
+    </style>
+</head>
+<body>
+<div class="table-container">
+    <table id="attendanceTable">
+        <thead>
+        <tr id="headerRow">
+            <th>Sl No</th>
+            <th>USN</th>
+            <th>Name</th>
+            <th>%</th>
+        </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+    </table>
+</div>
+
+<script>
+    function loadAttendance(students, sessions) {
+        const headerRow = document.getElementById("headerRow");
+        const body = document.getElementById("tableBody");
+
+        while (headerRow.children.length > 4) headerRow.removeChild(headerRow.children[headerRow.children.length - 2]);
+        body.innerHTML = "";
+
+        // Map session IDs to column index
+        const sessionMap = {}; // sessionId -> columnIndex
+        sessions.forEach((session, i) => {
+            const th = document.createElement("th");
+            th.textContent = session.date;
+            headerRow.insertBefore(th, headerRow.lastElementChild);
+            sessionMap[i] = session.id;
+        });
+
+        students.forEach((student, rowIndex) => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `<td>${rowIndex+1}</td><td>${student.usn}</td><td>${student.name}</td>`;
+            let attended = 0;
+
+            sessions.forEach((session, colIndex) => {
+                const status = student.attendance[session.date] || "A";
+                if (status === "P") attended++;
+                const td = document.createElement("td");
+                td.textContent = status;
+                td.className = status === "P" ? "present" : "absent";
+
+               td.onclick = function() {
+    const newStatus = td.textContent === "P" ? "A" : "P";
+    td.textContent = newStatus;
+    td.className = newStatus === "P" ? "present" : "absent";
+
+    if (typeof Android !== "undefined" && Android.updateAttendance) {
+        Android.updateAttendance(student.id, session.id, newStatus);
+    }
+};
+
+                tr.appendChild(td);
+            });
+
+            const tdPercent = document.createElement("td");
+            tdPercent.textContent = Math.round((attended / sessions.length) * 100) + "%";
+            tr.appendChild(tdPercent);
+            body.appendChild(tr);
+        });
+    }
+</script>
+
+</body>
+</html>

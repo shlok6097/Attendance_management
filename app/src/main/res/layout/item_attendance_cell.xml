@@ -1,0 +1,8 @@
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/tvCell"
+    android:layout_width="60dp"
+    android:layout_height="40dp"
+    android:gravity="center"
+    android:background="@drawable/cell_border"
+    android:text="A"
+    android:textSize="14sp"/>

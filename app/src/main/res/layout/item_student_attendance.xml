@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="8dp"
+    android:gravity="center_vertical">
+
+    <!-- Serial Number -->
+    <TextView
+        android:id="@+id/tvSlNo"
+        android:layout_width="40dp"
+        android:layout_height="wrap_content"
+        android:text="1"
+        android:textSize="14sp"
+        android:gravity="center" />
+
+    <!-- Roll Number -->
+    <TextView
+        android:id="@+id/tvRollNo"
+        android:layout_width="80dp"
+        android:layout_height="wrap_content"
+        android:text="22CS001"
+        android:textSize="14sp"
+        android:gravity="center" />
+
+    <!-- Student Name -->
+    <TextView
+        android:id="@+id/tvStudentName"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="John Doe"
+        android:textSize="14sp"
+        android:paddingStart="8dp" />
+
+    <!-- Attendance RadioGroup -->
+    <RadioGroup
+        android:id="@+id/rgAttendance"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <RadioButton
+            android:id="@+id/rbPresent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="P" />
+
+        <RadioButton
+            android:id="@+id/rbAbsent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="A"
+            android:layout_marginStart="12dp" />
+    </RadioGroup>
+</LinearLayout>

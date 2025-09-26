@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/home_navigation"
+    app:startDestination="@id/home">
+
+    <!-- Home Fragment -->
+    <fragment
+        android:id="@+id/home"
+        android:name="com.example.uvce_faculty.home"
+        android:label="fragment_home"
+        tools:layout="@layout/fragment_home">
+
+        <!-- Action to AttendanceSessionFragment (Take Attendance) -->
+        <action
+            android:id="@+id/action_home_to_attendanceSessionFragment"
+            app:destination="@id/attendanceSessionFragment" />
+
+        <!-- Action to AttendanceSheetFragment -->
+        <action
+            android:id="@+id/action_home_to_attendanceSheetFragment"
+            app:destination="@id/attendanceSheetFragment" />
+    </fragment>
+
+    <!-- Attendance Session Fragment -->
+    <fragment
+        android:id="@+id/attendanceSessionFragment"
+        android:name="com.example.uvce_faculty.AttendanceSessionFragment"
+        android:label="fragment_attendance_session"
+        tools:layout="@layout/fragment_attendance_session" />
+
+    <!-- Attendance Sheet Fragment -->
+    <fragment
+        android:id="@+id/attendanceSheetFragment"
+        android:name="com.example.uvce_faculty.AttendanceSheetFragment"
+        android:label="fragment_attendance_sheet"
+        tools:layout="@layout/fragment_attendance_sheet" />
+
+    <!-- Book Fragment -->
+    <fragment
+        android:id="@+id/book"
+        android:name="com.example.uvce_faculty.book"
+        android:label="fragment_book"
+        tools:layout="@layout/fragment_book">
+        <action
+            android:id="@+id/action_book_to_notification"
+            app:destination="@id/notification" />
+    </fragment>
+
+    <!-- Notification Fragment -->
+    <fragment
+        android:id="@+id/notification"
+        android:name="com.example.uvce_faculty.notification"
+        android:label="fragment_notification"
+        tools:layout="@layout/fragment_notification">
+        <action
+            android:id="@+id/action_notification_to_profile"
+            app:destination="@id/profile" />
+    </fragment>
+
+    <!-- Profile Fragment -->
+    <fragment
+        android:id="@+id/profile"
+        android:name="com.example.uvce_faculty.profile"
+        android:label="fragment_profile"
+        tools:layout="@layout/fragment_profile" />
+
+</navigation>

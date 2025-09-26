@@ -1,0 +1,13 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="360dp"
+    android:height="360dp"
+    android:viewportWidth="360"
+    android:viewportHeight="360">
+
+    <!-- Top wave (original) -->
+<path
+android:fillColor="#33FFFFFF"
+android:pathData="M0,0 L360,0 L360,100 Q280,180 180,120 Q80,60 0,100 Z" />
+
+
+    </vector>
