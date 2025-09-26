@@ -15,6 +15,7 @@ import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
 import java.util.*
 import kotlin.random.Random
 
@@ -37,7 +38,7 @@ class AttendanceSessionFragment : Fragment() {
     private lateinit var tvGeneratedCode: TextView
     private var isManualMode = true
 
-    // State guards
+    // State guards - key = "studentId|sessionId" for better concurrency
     private val inProgressCheckIns = mutableSetOf<String>()
 
     override fun onCreateView(
@@ -100,7 +101,6 @@ class AttendanceSessionFragment : Fragment() {
                         fetchStudents()
                         observeAttendanceRecords()
                     }
-
                     .addOnFailureListener { e ->
                         Toast.makeText(
                             requireContext(),
@@ -141,30 +141,36 @@ class AttendanceSessionFragment : Fragment() {
     /** ------------------- MARK ATTENDANCE ------------------- **/
     private fun markAttendance(studentId: String, status: String, mode: String) {
         val db = FirebaseFirestore.getInstance()
-        val docRef =
-            db.collection("attendanceBooks")
-                .document(bookId)
-                .collection("sessions")
-                .document(sessionId)
-                .collection("records")
-                .document(studentId)
 
-        if (inProgressCheckIns.contains(studentId)) return
-        inProgressCheckIns.add(studentId)
+        // Composite record ID for uniqueness
+        val recordId = "${bookId}_${sessionId}_$studentId"
+        val docRef = db.collection("attendanceRecords").document(recordId)
+        val opKey = "$studentId|$sessionId"
+
+        if (inProgressCheckIns.contains(opKey)) {
+            Log.d(TAG, "Skipping duplicate update for $opKey")
+            return
+        }
+        inProgressCheckIns.add(opKey)
 
         val data = mapOf(
+            "bookId" to bookId,
+            "sessionId" to sessionId,
+            "studentId" to studentId,
             "status" to status,
             "timestamp" to FieldValue.serverTimestamp(),
             "checkInType" to mode,
             "flagged" to false
         )
 
-        docRef.set(data).addOnSuccessListener {
-            inProgressCheckIns.remove(studentId)
+        Log.d(TAG, "Writing to Firestore: $opKey -> $status")
+        docRef.set(data, SetOptions.merge()).addOnSuccessListener {
+            inProgressCheckIns.remove(opKey)
+            Log.d(TAG, "Firestore write SUCCESS for $opKey")
             studentList.find { it.id == studentId }?.status = status
             updateAttendanceCounts()
         }.addOnFailureListener { e ->
-            inProgressCheckIns.remove(studentId)
+            inProgressCheckIns.remove(opKey)
             Log.e(TAG, "❌ Failed to mark attendance: ${e.message}")
         }
     }
@@ -172,17 +178,15 @@ class AttendanceSessionFragment : Fragment() {
     /** ------------------- OBSERVE ATTENDANCE ------------------- **/
     private fun observeAttendanceRecords() {
         FirebaseFirestore.getInstance()
-            .collection("attendanceBooks")
-            .document(bookId)
-            .collection("sessions")
-            .document(sessionId)
-            .collection("records")
+            .collection("attendanceRecords")
+            .whereEqualTo("bookId", bookId)
+            .whereEqualTo("sessionId", sessionId)
             .addSnapshotListener { snapshot, e ->
                 if (e != null) return@addSnapshotListener
 
                 val statusMap = mutableMapOf<String, String>()
                 snapshot?.documents?.forEach { doc ->
-                    val studentId = doc.id
+                    val studentId = doc.getString("studentId") ?: return@forEach
                     val status = doc.getString("status") ?: "A"
                     statusMap[studentId] = status
                 }
@@ -219,45 +223,51 @@ class AttendanceSessionFragment : Fragment() {
 
         studentAdapter.isManualMode = isManualMode
 
+        val sessionRef = FirebaseFirestore.getInstance()
+            .collection("attendanceBooks")
+            .document(bookId)
+            .collection("sessions")
+            .document(sessionId)
+
         if (!isManualMode) {
             sessionCode = generateCode(4)
             tvGeneratedCode.text = "Code: $sessionCode"
 
             val expiresAt = Timestamp(Date(System.currentTimeMillis() + 5 * 60 * 1000))
 
-            FirebaseFirestore.getInstance()
-                .collection("attendanceBooks")
-                .document(bookId)
-                .collection("sessions")
-                .document(sessionId)
-                .update(
-                    mapOf(
-                        "code" to sessionCode,
-                        "codeGeneratedAt" to FieldValue.serverTimestamp(),
-                        "expiresAt" to expiresAt
-                    )
+            sessionRef.update(
+                mapOf(
+                    "code" to sessionCode,
+                    "codeGeneratedAt" to FieldValue.serverTimestamp(),
+                    "expiresAt" to expiresAt
                 )
+            )
         } else {
             tvGeneratedCode.text = ""
-            FirebaseFirestore.getInstance()
-                .collection("sessions")
-                .document(sessionId)
-                .update("code", FieldValue.delete(), "expiresAt", FieldValue.delete())
+            sessionRef.update(
+                mapOf(
+                    "code" to FieldValue.delete(),
+                    "expiresAt" to FieldValue.delete()
+                )
+            )
         }
     }
 
     /** ------------------- END SESSION ------------------- **/
     private fun endSession() {
         val db = FirebaseFirestore.getInstance()
-        val sessionRef = db.collection("attendanceBooks")
-            .document(bookId)
-            .collection("sessions")
-            .document(sessionId)
 
-        sessionRef.collection("records")
+        db.collection("attendanceRecords")
+            .whereEqualTo("bookId", bookId)
+            .whereEqualTo("sessionId", sessionId)
             .get()
             .addOnSuccessListener { snapshot ->
                 val totalPresent = snapshot.documents.count { it.getString("status") == "P" }
+
+                val sessionRef = db.collection("attendanceBooks")
+                    .document(bookId)
+                    .collection("sessions")
+                    .document(sessionId)
 
                 sessionRef.update(
                     mapOf(
@@ -278,7 +288,6 @@ class AttendanceSessionFragment : Fragment() {
                 }
             }
     }
-
 
     /** ------------------- Helper: Code Generator ------------------- **/
     private fun generateCode(length: Int): String {

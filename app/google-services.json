@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "1041131514391",
+    "project_id": "uvce-226eb",
+    "storage_bucket": "uvce-226eb.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1041131514391:android:568639e86088589fc2ca52",
+        "android_client_info": {
+          "package_name": "com.example.uvce_faculty"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD-nkmGfN9zH645jbm3CV0bX0GsSTCCQ7M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1041131514391:android:07de5cd820dd5340c2ca52",
+        "android_client_info": {
+          "package_name": "com.example.uvce_students"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD-nkmGfN9zH645jbm3CV0bX0GsSTCCQ7M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

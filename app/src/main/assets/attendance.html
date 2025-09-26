@@ -11,6 +11,7 @@
         th { background: #3f51b5; color: white; position: sticky; top: 0; z-index: 2; }
         .present { background-color: #b2ff59; }
         .absent { background-color: #ff8a80; }
+        td { cursor: pointer; }
     </style>
 </head>
 <body>
@@ -29,54 +30,116 @@
 </div>
 
 <script>
-    function loadAttendance(students, sessions) {
-        const headerRow = document.getElementById("headerRow");
-        const body = document.getElementById("tableBody");
+    let __sessions = [];
+    let __studentsById = {};      // studentId -> { student, tr }
+    let __sessionColIndex = {};    // sessionId -> column index in table
 
-        while (headerRow.children.length > 4) headerRow.removeChild(headerRow.children[headerRow.children.length - 2]);
-        body.innerHTML = "";
+   function loadAttendance(students, sessions) {
+    const headerRow = document.getElementById("headerRow");
+    const body = document.getElementById("tableBody");
 
-        // Map session IDs to column index
-        const sessionMap = {}; // sessionId -> columnIndex
-        sessions.forEach((session, i) => {
-            const th = document.createElement("th");
-            th.textContent = session.date;
-            headerRow.insertBefore(th, headerRow.lastElementChild);
-            sessionMap[i] = session.id;
+    while (headerRow.children.length > 4) headerRow.removeChild(headerRow.children[headerRow.children.length - 2]);
+    body.innerHTML = "";
+
+    __sessions = sessions.slice();
+    __sessionColIndex = {};
+    sessions.forEach((session, i) => {
+        const th = document.createElement("th");
+        th.textContent = session.date;
+        headerRow.insertBefore(th, headerRow.lastElementChild);
+        __sessionColIndex[session.id] = 3 + i; // 3 fixed columns
+    });
+
+    __studentsById = {};
+    const fragment = document.createDocumentFragment();
+
+    students.forEach((student, rowIndex) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${rowIndex + 1}</td><td>${student.usn}</td><td>${student.name}</td>`;
+
+        // Build attendance map keyed by sessionId
+        const attendanceBySessionId = {};
+        student.attendance.forEach(a => {
+            attendanceBySessionId[a.sessionId] = a.status;
         });
 
-        students.forEach((student, rowIndex) => {
-            const tr = document.createElement("tr");
-            tr.innerHTML = `<td>${rowIndex+1}</td><td>${student.usn}</td><td>${student.name}</td>`;
-            let attended = 0;
+        let attendedCount = 0;
+        __sessions.forEach(session => {
+            const status = attendanceBySessionId[session.id] || "A";
+            if (status === "P") attendedCount++;
 
-            sessions.forEach((session, colIndex) => {
-                const status = student.attendance[session.date] || "A";
-                if (status === "P") attended++;
-                const td = document.createElement("td");
-                td.textContent = status;
-                td.className = status === "P" ? "present" : "absent";
+            const td = document.createElement("td");
+            td.id = `status-${student.id}-${session.id}`;
+            td.textContent = status;
+            td.className = status === "P" ? "present" : "absent";
 
-               td.onclick = function() {
-    const newStatus = td.textContent === "P" ? "A" : "P";
-    td.textContent = newStatus;
-    td.className = newStatus === "P" ? "present" : "absent";
+            td.addEventListener("click", () => toggleStatus(student.id, session.id));
 
-    if (typeof Android !== "undefined" && Android.updateAttendance) {
-        Android.updateAttendance(student.id, session.id, newStatus);
+            tr.appendChild(td);
+        });
+
+        const tdPercent = document.createElement("td");
+        tdPercent.textContent = Math.round(attendedCount / __sessions.length * 100) + "%";
+        tr.appendChild(tdPercent);
+
+        __studentsById[student.id] = { student, tr, attendanceBySessionId };
+        fragment.appendChild(tr);
+    });
+
+    body.appendChild(fragment);
+}
+
+
+    // Toggle attendance on click
+    function toggleStatus(studentId, sessionId) {
+        const mapping = __studentsById[studentId];
+        if (!mapping) return;
+
+        const { student, tr } = mapping;
+        const colIndex = __sessionColIndex[sessionId];
+        if (colIndex === undefined) return;
+
+        const td = tr.children[colIndex];
+        const newStatus = td.textContent === "P" ? "A" : "P";
+        td.textContent = newStatus;
+        td.className = newStatus === "P" ? "present" : "absent";
+
+        // Update model
+        const sessionDate = __sessions.find(s => s.id === sessionId).date;
+        student.attendance[sessionDate] = newStatus;
+
+        // Recalculate %
+        let attendedCount = 0;
+        __sessions.forEach(s => { if ((student.attendance[s.date] || "A") === "P") attendedCount++; });
+        tr.lastElementChild.textContent = Math.round(attendedCount / __sessions.length * 100) + "%";
+
+        // Notify Android
+        if (typeof Android !== "undefined" && Android.updateAttendance) {
+            Android.updateAttendance(student.id, sessionId, newStatus);
+        }
     }
-};
 
-                tr.appendChild(td);
-            });
+    // Update a single cell from Android after DB change
+    function updateFromAndroid(studentId, sessionId, status) {
+        const mapping = __studentsById[studentId];
+        if (!mapping) return;
 
-            const tdPercent = document.createElement("td");
-            tdPercent.textContent = Math.round((attended / sessions.length) * 100) + "%";
-            tr.appendChild(tdPercent);
-            body.appendChild(tr);
-        });
+        const { student, tr } = mapping;
+        const colIndex = __sessionColIndex[sessionId];
+        if (colIndex === undefined) return;
+
+        const td = tr.children[colIndex];
+        td.textContent = status;
+        td.className = status === "P" ? "present" : "absent";
+
+        const sessionDate = __sessions.find(s => s.id === sessionId).date;
+        student.attendance[sessionDate] = status;
+
+        // Recalculate %
+        let attendedCount = 0;
+        __sessions.forEach(s => { if ((student.attendance[s.date] || "A") === "P") attendedCount++; });
+        tr.lastElementChild.textContent = Math.round(attendedCount / __sessions.length * 100) + "%";
     }
 </script>
-
 </body>
 </html>

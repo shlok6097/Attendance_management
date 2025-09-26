@@ -1,37 +1,46 @@
-package com.example.uvce_faculty
-
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.example.uvce_faculty.R
+import com.example.uvce_faculty.Session
+import com.example.uvce_faculty.Student
 
 class AttendanceCellAdapter(
-    private val dates: List<String>,
-    private val row: AttendanceRow,
-    private val onCellClick: (date: String, newStatus: String) -> Unit
+    private val student: Student,
+    private val sessions: List<Session>,
+    private val onCellClick: (studentId: String, sessionId: String, status: String) -> Unit
 ) : RecyclerView.Adapter<AttendanceCellAdapter.CellViewHolder>() {
 
-    inner class CellViewHolder(val tvCell: TextView) : RecyclerView.ViewHolder(tvCell)
+    class CellViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        val tvStatus: TextView = itemView.findViewById(R.id.tvStatus)
+    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CellViewHolder {
         val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_attendance_cell, parent, false) as TextView
+            .inflate(R.layout.item_attendance_cell, parent, false)
         return CellViewHolder(view)
     }
 
-    override fun getItemCount(): Int = dates.size
-
     override fun onBindViewHolder(holder: CellViewHolder, position: Int) {
-        val date = dates[position]
-        val status = row.attendance[date] ?: "A"
-        holder.tvCell.text = status
-        holder.tvCell.setBackgroundColor(if (status == "P") 0xFFB2FF59.toInt() else 0xFFFF8A80.toInt())
+        val session = sessions[position]
+        val status = student.attendance[session.date] ?: "A"
 
-        holder.tvCell.setOnClickListener {
+        holder.tvStatus.text = status
+        holder.tvStatus.setBackgroundColor(
+            if (status == "P") {
+                holder.itemView.context.getColor(android.R.color.holo_green_light)
+            } else {
+                holder.itemView.context.getColor(android.R.color.holo_red_light)
+            }
+        )
+
+        holder.itemView.setOnClickListener {
             val newStatus = if (status == "P") "A" else "P"
-            row.attendance[date] = newStatus
-            onCellClick(date, newStatus)
-            notifyItemChanged(position)
+            onCellClick(student.id, session.id, newStatus)
         }
     }
+
+    override fun getItemCount(): Int = sessions.size
 }
