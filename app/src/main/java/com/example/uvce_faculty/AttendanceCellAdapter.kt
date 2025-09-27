@@ -25,22 +25,24 @@ class AttendanceCellAdapter(
 
     override fun onBindViewHolder(holder: CellViewHolder, position: Int) {
         val session = sessions[position]
-        val status = student.attendance[session.date] ?: "A"
+        val currentStatus = student.attendance[session.id] ?: "A" // Use session.id
+        holder.tvStatus.text = currentStatus
 
-        holder.tvStatus.text = status
         holder.tvStatus.setBackgroundColor(
-            if (status == "P") {
+            if (currentStatus == "P")
                 holder.itemView.context.getColor(android.R.color.holo_green_light)
-            } else {
+            else
                 holder.itemView.context.getColor(android.R.color.holo_red_light)
-            }
         )
 
         holder.itemView.setOnClickListener {
-            val newStatus = if (status == "P") "A" else "P"
+            val newStatus = if ((student.attendance[session.id] ?: "A") == "P") "A" else "P"
+            student.attendance[session.id] = newStatus
+            notifyItemChanged(position)
             onCellClick(student.id, session.id, newStatus)
         }
     }
+
 
     override fun getItemCount(): Int = sessions.size
 }

@@ -6,7 +6,7 @@ data class Student(
     val rollNumber: String = "",
     val usn: String = "",
     var status: String = "",
-    val attendance: MutableMap<String, String> = mutableMapOf()
+    var attendance: MutableMap<String, String> = mutableMapOf()
 )
 data class Session(
     val id: String,

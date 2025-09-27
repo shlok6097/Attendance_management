@@ -5,10 +5,10 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import kotlin.math.roundToInt // Import for rounding
+import kotlin.math.roundToInt
 
-// Payload class for partial updates
 data class AttendanceCellUpdatePayload(val sessionId: String)
 
 class AttendanceSheetAdapter(
@@ -31,66 +31,58 @@ class AttendanceSheetAdapter(
         return StudentViewHolder(view)
     }
 
-    // Full bind logic
+    override fun getItemCount(): Int = students.size
+
     override fun onBindViewHolder(holder: StudentViewHolder, position: Int) {
         val student = students[position]
 
-        holder.tvSlNo.text = (position + 1).toString() // Consider R.string for "Sl No. %d"
+        holder.tvSlNo.text = (position + 1).toString()
         holder.tvUSN.text = student.usn
         holder.tvName.text = student.name
 
-        // Calculate percentage
-        val attendedCount = sessions.count { session ->
-            student.attendance[session.date] == "P"
-        }
-        val percentage = if (sessions.isNotEmpty()) {
-            (attendedCount.toFloat() / sessions.size * 100).roundToInt()
-        } else 0
-        // Consider using string resources: holder.itemView.context.getString(R.string.percentage_format, percentage)
-        holder.tvPercentage.text = holder.itemView.context.getString(R.string.percentage_display, percentage)
+        updatePercentage(holder, student)
 
-
-        // Setup attendance cells RecyclerView
+        // Inner RecyclerView for attendance cells
         val cellAdapter = AttendanceCellAdapter(
             student = student,
             sessions = sessions,
-            onCellClick = this.onCellClick // Propagate the click handler
+            onCellClick = { studentId, sessionId, newStatus ->
+                student.attendance[sessionId] = newStatus
+                onCellClick(studentId, sessionId, newStatus)
+
+                // Update percentage
+                updatePercentage(holder, student)
+
+                // Update only that cell
+                val sessionIndex = sessions.indexOfFirst { it.id == sessionId }
+                if (sessionIndex != -1) {
+                    holder.rvAttendanceCells.adapter?.notifyItemChanged(sessionIndex)
+                }
+            }
         )
-        holder.rvAttendanceCells.layoutManager = androidx.recyclerview.widget.LinearLayoutManager(
-            holder.itemView.context,
-            androidx.recyclerview.widget.LinearLayoutManager.HORIZONTAL,
-            false
-        )
+
+        holder.rvAttendanceCells.layoutManager =
+            LinearLayoutManager(holder.itemView.context, LinearLayoutManager.HORIZONTAL, false)
         holder.rvAttendanceCells.adapter = cellAdapter
     }
 
-    // Partial bind logic (with payloads)
-    override fun onBindViewHolder(holder: StudentViewHolder, position: Int, payloads: MutableList<Any>) {
+    override fun onBindViewHolder(
+        holder: StudentViewHolder,
+        position: Int,
+        payloads: MutableList<Any>
+    ) {
         if (payloads.isEmpty()) {
-            // No payload, do a full bind by calling the other onBindViewHolder
             super.onBindViewHolder(holder, position, payloads)
         } else {
-            val student = students[position] // Get the current student data
-
+            val student = students[position]
             payloads.forEach { payload ->
                 if (payload is AttendanceCellUpdatePayload) {
-                    // 1. Update the percentage text (it's affected by cell change)
-                    val attendedCount = sessions.count { s -> student.attendance[s.date] == "P" }
-                    val percentage = if (sessions.isNotEmpty()) {
-                        (attendedCount.toFloat() / sessions.size * 100).roundToInt()
-                    } else 0
-                    holder.tvPercentage.text = holder.itemView.context.getString(R.string.percentage_display, percentage)
-
-
-                    // 2. Notify the inner AttendanceCellAdapter to update the specific cell
+                    updatePercentage(holder, student)
                     val cellAdapter = holder.rvAttendanceCells.adapter as? AttendanceCellAdapter
-                    // Use this.sessions (or just sessions) from AttendanceSheetAdapter's scope
-                    val sessionIndexToUpdate = this.sessions.indexOfFirst { it.id == payload.sessionId }
-
-                    if (cellAdapter != null && sessionIndexToUpdate != -1) { // Check sessionIndexToUpdate directly
-                        cellAdapter.notifyItemChanged(sessionIndexToUpdate)
+                    val sessionIndex = sessions.indexOfFirst { it.id == payload.sessionId }
+                    if (cellAdapter != null && sessionIndex != -1) {
+                        cellAdapter.notifyItemChanged(sessionIndex)
                     } else {
-                        // Fallback if specific update i// Less ideal, but a safe fallbacksn't possible (e.g., session not found)
                         cellAdapter?.notifyDataSetChanged()
                     }
                 }
@@ -98,8 +90,13 @@ class AttendanceSheetAdapter(
         }
     }
 
-
-    override fun getItemCount(): Int = students.size
+    private fun updatePercentage(holder: StudentViewHolder, student: Student) {
+        val attendedCount = sessions.count { session ->
+            student.attendance[session.id]?.let { it == "P" } ?: false
+        }
+        val percentage = if (sessions.isNotEmpty()) (attendedCount.toFloat() / sessions.size * 100).roundToInt() else 0
+        holder.tvPercentage.text = holder.itemView.context.getString(R.string.percentage_display, percentage)
+    }
 
     fun updateData(newStudents: List<Student>, newSessions: List<Session>) {
         students = newStudents
@@ -107,19 +104,12 @@ class AttendanceSheetAdapter(
         notifyDataSetChanged()
     }
 
-    // This function now triggers a partial update via payload
     fun updateStudent(studentId: String, sessionId: String, status: String) {
         val studentIndex = students.indexOfFirst { it.id == studentId }
         if (studentIndex != -1) {
             val student = students[studentIndex]
-            val session = sessions.find { it.id == sessionId }
-            if (session != null) {
-                student.attendance[session.date] = status // Update data model
-
-                // Prepare payload for partial update
-                val payload = AttendanceCellUpdatePayload(sessionId = session.id)
-                notifyItemChanged(studentIndex, payload)
-            }
+            student.attendance[sessionId] = status
+            notifyItemChanged(studentIndex, AttendanceCellUpdatePayload(sessionId))
         }
     }
 }
