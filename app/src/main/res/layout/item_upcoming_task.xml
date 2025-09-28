@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="12dp"
+    android:layout_marginBottom="8dp"
+    android:background="@drawable/item_background_rounded_corners"> <!-- Optional: a background drawable for item styling -->
+
+    <TextView
+        android:id="@+id/tvItemTaskTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
+        android:textStyle="bold"
+        tools:text="Prepare Midterm Exam Papers" />
+
+    <TextView
+        android:id="@+id/tvItemTaskSubject"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"
+        android:layout_marginTop="4dp"
+        tools:text="Subject: Advanced Algorithms" />
+
+    <TextView
+        android:id="@+id/tvItemTaskDueDate"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
+        android:layout_marginTop="4dp"
+        tools:text="Due: 2023-12-25 10:00 AM" />
+
+</LinearLayout>

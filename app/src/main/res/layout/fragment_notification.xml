@@ -1,14 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".notification">
+    android:orientation="vertical"
+    android:padding="16dp"
+    tools:context=".NotificationFragment"> 
 
-    <!-- TODO: Update blank fragment layout -->
     <TextView
+        android:id="@+id/tvNotificationTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/upcoming_tasks_title" 
+        android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
+        android:layout_marginBottom="16dp"/>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvUpcomingTasks"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:text="hellonotificationragment" />
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+        tools:listitem="@layout/item_upcoming_task" /> 
 
-</FrameLayout>
+    <TextView
+        android:id="@+id/tvNoUpcomingTasks"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/no_upcoming_tasks"
+        android:gravity="center"
+        android:visibility="gone" 
+        tools:visibility="visible"/>
+
+</LinearLayout>

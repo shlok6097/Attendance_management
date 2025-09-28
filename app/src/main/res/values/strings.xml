@@ -3,4 +3,28 @@
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="percentage_display">%1$d%%</string>
+
+    <!-- Strings for fragment_book.xml -->
+    <string name="create_attendance_book_title">Create Attendance Book</string>
+    <string name="branch">Branch</string>
+    <string name="semester">Semester</string>
+    <string name="subject">Subject</string>
+    <string name="enter_subject_name">Enter subject name</string>
+    <string name="students">Students</string>
+    <string name="create_attendance_book_button">Create Attendance Book</string>
+    <string name="manage_tasks_button">Manage Tasks</string>
+
+    <!-- Strings for Add Task form -->
+    <string name="add_new_task_title">Add New Task</string>
+    <string name="task_title_hint">Task Title</string>
+    <string name="task_description_hint">Task Description (Optional)</string>
+    <string name="select_due_date_button">Select Due Date</string>
+    <string name="select_due_time_button">Select Due Time</string>
+    <string name="reminder_label">Reminder</string>
+    <string name="priority_label">Priority</string>
+    <string name="save_task_button">Save Task</string>
+
+    <!-- Strings for NotificationFragment -->
+    <string name="upcoming_tasks_title">Upcoming Tasks</string>
+    <string name="no_upcoming_tasks">No upcoming tasks found.</string>
 </resources>
